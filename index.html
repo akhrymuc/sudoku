@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>数独</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#efece5">
+<meta name="description" content="シンプルな数独">
+
+<!-- ホーム画面に追加したときに全画面アプリとして起動する（iOS） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="数独">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css?v21">
+</head>
+<body>
+
+<!-- ===== ホーム画面 ===== -->
+<section id="home" class="screen is-active">
+  <h1 class="brand">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="1.5" y="1.5" width="45" height="45" rx="7" fill="none"
+            stroke="var(--line-bold)" stroke-width="2.5"/>
+      <path d="M16.5 3v42M31.5 3v42M3 16.5h42M3 31.5h42" stroke="var(--line)" stroke-width="1.4"/>
+      <rect x="4.2" y="4.2" width="10.6" height="10.6" rx="1.6" fill="var(--accent)"/>
+      <rect x="19.2" y="19.2" width="10.6" height="10.6" rx="1.6" fill="var(--accent)" opacity=".55"/>
+      <rect x="34.2" y="34.2" width="10.6" height="10.6" rx="1.6" fill="var(--accent)" opacity=".25"/>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-ja">数独</span>
+      <span class="brand-en">SUDOKU</span>
+    </span>
+  </h1>
+
+  <button id="continueBtn" class="btn btn-primary hidden">続きから</button>
+  <p id="continueInfo" class="continue-info hidden"></p>
+
+  <p class="section-label">新しく始める</p>
+  <div class="level-list">
+    <button class="btn btn-level" data-level="easy" data-hint="ヒント45">やさしい</button>
+    <button class="btn btn-level" data-level="normal" data-hint="ヒント32">ふつう</button>
+    <button class="btn btn-level" data-level="hard" data-hint="ヒント28">難しい</button>
+  </div>
+
+  <label class="setting">
+    <input type="checkbox" id="instantCheck">
+    <span>間違いをその場で表示する</span>
+  </label>
+
+  <button id="statsBtn" class="stats-link hidden">
+    <span id="statsCount"></span>
+    <span class="chev">›</span>
+  </button>
+
+  <p id="version" class="version"></p>
+</section>
+
+<!-- ===== きろく画面 ===== -->
+<section id="records" class="screen">
+  <header class="game-header">
+    <div class="header-left">
+      <button id="recordsBackBtn" class="btn-icon" aria-label="ホームに戻る">← 戻る</button>
+    </div>
+    <span class="level-label">クリア記録</span>
+    <span></span>
+  </header>
+
+  <div class="metrics">
+    <div class="metric"><span class="metric-label">今月</span><span id="mMonth" class="metric-value"></span></div>
+    <div class="metric"><span class="metric-label">今週</span><span id="mWeek" class="metric-value"></span></div>
+    <div class="metric"><span class="metric-label">連続</span><span id="mStreak" class="metric-value"></span></div>
+  </div>
+
+  <div id="statsTable" class="record-list"></div>
+
+  <p id="statsTotal" class="stats-total"></p>
+</section>
+
+<!-- ===== ゲーム画面 ===== -->
+<section id="game" class="screen">
+  <header class="game-header">
+    <div class="header-left">
+      <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="2" y="2" width="44" height="44" rx="7" fill="none"
+              stroke="var(--line-bold)" stroke-width="3"/>
+        <path d="M16.5 3v42M31.5 3v42M3 16.5h42M3 31.5h42" stroke="var(--line)" stroke-width="1.6"/>
+        <rect x="4.6" y="4.6" width="9.8" height="9.8" rx="1.6" fill="var(--accent)"/>
+        <rect x="19.6" y="19.6" width="9.8" height="9.8" rx="1.6" fill="var(--accent)" opacity=".55"/>
+        <rect x="34.6" y="34.6" width="9.8" height="9.8" rx="1.6" fill="var(--accent)" opacity=".25"/>
+      </svg>
+      <button id="backBtn" class="btn-icon" aria-label="ホームに戻る">← 戻る</button>
+    </div>
+    <span id="levelLabel" class="level-label"></span>
+    <span class="header-right">
+      <span id="remainLabel" class="remain-label"></span>
+      <span id="timeLabel" class="time-label"></span>
+    </span>
+  </header>
+
+  <div id="board" class="board" role="grid" aria-label="数独の盤面"></div>
+
+  <div id="message" class="message" aria-live="polite"></div>
+
+  <div class="tools">
+    <button id="noteBtn" class="btn btn-tool">メモ<small>候補を書く</small></button>
+    <button id="undoBtn" class="btn btn-tool">取消<small>一手戻す</small></button>
+    <button id="eraseBtn" class="btn btn-tool">消去<small>マスを空に</small></button>
+  </div>
+
+  <div id="pad" class="pad"></div>
+</section>
+
+<!-- ===== 完成表示 ===== -->
+<div id="clearOverlay" class="overlay">
+  <div class="overlay-card">
+    <!-- ふつうにクリアしたとき：花丸 -->
+    <svg id="markFlower" class="clear-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <g fill="var(--panel)" stroke="#d94f3d" stroke-width="3.5">
+        <circle cx="50" cy="14" r="11"/><circle cx="75.5" cy="24.5" r="11"/>
+        <circle cx="86" cy="50" r="11"/><circle cx="75.5" cy="75.5" r="11"/>
+        <circle cx="50" cy="86" r="11"/><circle cx="24.5" cy="75.5" r="11"/>
+        <circle cx="14" cy="50" r="11"/><circle cx="24.5" cy="24.5" r="11"/>
+      </g>
+      <circle cx="50" cy="50" r="26.5" fill="var(--panel)"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#d94f3d" stroke-width="4"/>
+      <circle cx="50" cy="50" r="15" fill="none" stroke="#d94f3d" stroke-width="4"/>
+    </svg>
+
+    <!-- 自己最速が出たとき：王冠 -->
+    <svg id="markCrown" class="clear-mark hidden" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M18 68 L10 30 L30 44 L50 18 L70 44 L90 30 L82 68 Z" fill="#e0a33a"/>
+      <rect x="18" y="72" width="64" height="11" rx="3" fill="#c98a26"/>
+      <circle cx="50" cy="52" r="6" fill="var(--panel)"/>
+      <circle cx="30" cy="58" r="4" fill="var(--panel)"/>
+      <circle cx="70" cy="58" r="4" fill="var(--panel)"/>
+    </svg>
+
+    <p id="clearTitle" class="overlay-title">完成！</p>
+    <p id="clearBest" class="overlay-best hidden"></p>
+    <p id="clearPrev" class="overlay-prev hidden"></p>
+    <p id="clearDetail" class="overlay-detail"></p>
+    <button id="againBtn" class="btn btn-primary">同じ難易度でもう一問</button>
+    <button id="toHomeBtn" class="btn btn-secondary">最初の画面へ</button>
+  </div>
+</div>
+
+<!-- ===== 生成中 ===== -->
+<div id="loading" class="overlay">
+  <div class="overlay-card">
+    <p class="overlay-title" style="letter-spacing:0;font-size:17px;margin:0">問題を作成中</p>
+  </div>
+</div>
+
+<script src="sudoku.js?v21"></script>
+<script src="app.js?v21"></script>
+</body>
+</html>
